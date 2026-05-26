@@ -1,6 +1,6 @@
 """
 Server configuration — environment variables with sensible defaults.
-Secrets (GEMINI_API_KEY) must be set in the environment or .env file.
+Secrets (API keys) must be set in the environment or .env file.
 """
 import os
 
@@ -12,9 +12,33 @@ PORT: int = int(os.environ.get("PORT", "8000"))
 REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379")
 SESSION_HISTORY_MAX: int = 10  # sliding window — max conversation turns kept
 
-# ─── LLM (Gemini) ─────────────────────────────────────────────────────────────
+# ─── LLM — provider selection ─────────────────────────────────────────────────
+# Set LLM_PROVIDER to one of: gemini | openai | openrouter | grok | together
+LLM_PROVIDER: str = os.environ.get("LLM_PROVIDER", "gemini")
+
+# ─── LLM — Gemini ─────────────────────────────────────────────────────────────
 GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL: str = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+
+# ─── LLM — OpenAI ─────────────────────────────────────────────────────────────
+OPENAI_API_KEY: str = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL: str = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+# ─── LLM — OpenRouter ─────────────────────────────────────────────────────────
+OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL: str = os.environ.get(
+    "OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free"
+)
+
+# ─── LLM — Grok (xAI) ────────────────────────────────────────────────────────
+XAI_API_KEY: str = os.environ.get("XAI_API_KEY", "")
+GROK_MODEL: str = os.environ.get("GROK_MODEL", "grok-3-mini")
+
+# ─── LLM — Together AI ────────────────────────────────────────────────────────
+TOGETHER_API_KEY: str = os.environ.get("TOGETHER_API_KEY", "")
+TOGETHER_MODEL: str = os.environ.get(
+    "TOGETHER_MODEL", "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo"
+)
 
 # ─── TTS (Edge-TTS) ───────────────────────────────────────────────────────────
 TTS_VOICE: str = os.environ.get("TTS_VOICE", "vi-VN-HoaiMyNeural")
