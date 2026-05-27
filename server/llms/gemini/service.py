@@ -14,15 +14,9 @@ from google.genai import types
 
 from server.llms.base import BaseLLMService, LLMError
 from server.models.schemas import ConversationMessage
+from server.prompts import DEFAULT_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
-
-_DEFAULT_SYSTEM_PROMPT = (
-    "Bạn là trợ lý giọng nói thông minh cho hệ thống nhà thông minh. "
-    "Trả lời ngắn gọn, tự nhiên bằng tiếng Việt. "
-    "Khi điều khiển thiết bị thành công, xác nhận ngắn gọn. "
-    "Khi có lỗi, giải thích thân thiện và đề xuất giải pháp."
-)
 
 
 class GeminiLLMService(BaseLLMService):
@@ -50,7 +44,7 @@ class GeminiLLMService(BaseLLMService):
         self,
         api_key: str,
         model: str,
-        system_prompt: str = _DEFAULT_SYSTEM_PROMPT,
+        system_prompt: str = DEFAULT_SYSTEM_PROMPT,
         temperature: float = 0.7,
         max_tokens: int = 512,
     ) -> None:
