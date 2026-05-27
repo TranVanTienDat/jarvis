@@ -5,27 +5,33 @@ Reads provider selection and all model/key config from ``server.config``,
 which in turn reads from environment variables.
 
 Supported values for ``LLM_PROVIDER`` env var:
-    gemini      (default)
+    gemini        (default)
     openai
     openrouter
     grok
     together
+    deepseek
+    huggingface
 
 Environment variables reference:
 
-    Variable              | Provider    | Description
-    ----------------------|-------------|-----------------------------
-    LLM_PROVIDER          | all         | Which provider to use
-    GEMINI_API_KEY        | gemini      | Google AI API key
-    GEMINI_MODEL          | gemini      | e.g. gemini-2.0-flash
-    OPENAI_API_KEY        | openai      | OpenAI API key
-    OPENAI_MODEL          | openai      | e.g. gpt-4o, gpt-4o-mini
-    OPENROUTER_API_KEY    | openrouter  | OpenRouter API key
-    OPENROUTER_MODEL      | openrouter  | e.g. anthropic/claude-3.5-sonnet
-    XAI_API_KEY           | grok        | xAI API key
-    GROK_MODEL            | grok        | e.g. grok-3, grok-3-mini
-    TOGETHER_API_KEY      | together    | Together AI API key
-    TOGETHER_MODEL        | together    | e.g. meta-llama/Llama-3.3-70B-Instruct-Turbo
+    Variable              | Provider     | Description
+    ----------------------|--------------|-----------------------------
+    LLM_PROVIDER          | all          | Which provider to use
+    GEMINI_API_KEY        | gemini       | Google AI API key
+    GEMINI_MODEL          | gemini       | e.g. gemini-2.0-flash
+    OPENAI_API_KEY        | openai       | OpenAI API key
+    OPENAI_MODEL          | openai       | e.g. gpt-4o, gpt-4o-mini
+    OPENROUTER_API_KEY    | openrouter   | OpenRouter API key
+    OPENROUTER_MODEL      | openrouter   | e.g. anthropic/claude-3.5-sonnet
+    XAI_API_KEY           | grok         | xAI API key
+    GROK_MODEL            | grok         | e.g. grok-3, grok-3-mini
+    TOGETHER_API_KEY      | together     | Together AI API key
+    TOGETHER_MODEL        | together     | e.g. meta-llama/Llama-3.3-70B-Instruct-Turbo
+    DEEPSEEK_API_KEY      | deepseek     | DeepSeek API key
+    DEEPSEEK_MODEL        | deepseek     | e.g. deepseek-chat, deepseek-reasoner
+    HF_API_KEY            | huggingface  | Hugging Face token
+    HF_MODEL              | huggingface  | e.g. meta-llama/Llama-3.1-8B-Instruct
 """
 from __future__ import annotations
 
@@ -85,9 +91,25 @@ def create_llm_service() -> BaseLLMService:
             model=cfg.TOGETHER_MODEL,
         )
 
+    if provider == "deepseek":
+        from server.llms.deepseek import DeepSeekLLMService
+        _require_key("DEEPSEEK_API_KEY", cfg.DEEPSEEK_API_KEY, provider)
+        return DeepSeekLLMService(
+            api_key=cfg.DEEPSEEK_API_KEY,
+            model=cfg.DEEPSEEK_MODEL,
+        )
+
+    if provider == "huggingface":
+        from server.llms.huggingface import HuggingFaceLLMService
+        _require_key("HF_API_KEY", cfg.HF_API_KEY, provider)
+        return HuggingFaceLLMService(
+            api_key=cfg.HF_API_KEY,
+            model=cfg.HF_MODEL,
+        )
+
     raise ValueError(
         f"Unknown LLM_PROVIDER={provider!r}. "
-        "Valid options: gemini, openai, openrouter, grok, together"
+        "Valid options: gemini, openai, openrouter, grok, together, deepseek, huggingface"
     )
 
 

@@ -2,11 +2,13 @@
 LLM provider package.
 
 Each sub-folder is one provider:
-    gemini/      — Google Gemini (google-genai SDK)
-    openai/      — OpenAI GPT models
-    openrouter/  — OpenRouter multi-model gateway
-    grok/        — xAI Grok
-    together/    — Together AI open-source models
+    gemini/        — Google Gemini (google-genai SDK)
+    openai/        — OpenAI GPT models
+    openrouter/    — OpenRouter multi-model gateway
+    grok/          — xAI Grok
+    together/      — Together AI open-source models
+    deepseek/      — DeepSeek (OpenAI-compatible API)
+    huggingface/   — Hugging Face Inference API
 
 Use ``create_llm_service()`` to get the provider configured via
 the ``LLM_PROVIDER`` environment variable (default: ``"gemini"``).

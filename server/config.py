@@ -13,7 +13,7 @@ REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379")
 SESSION_HISTORY_MAX: int = 10  # sliding window — max conversation turns kept
 
 # ─── LLM — provider selection ─────────────────────────────────────────────────
-# Set LLM_PROVIDER to one of: gemini | openai | openrouter | grok | together
+# Set LLM_PROVIDER to one of: gemini | openai | openrouter | grok | together | deepseek | huggingface
 LLM_PROVIDER: str = os.environ.get("LLM_PROVIDER", "gemini")
 
 # ─── LLM — Gemini ─────────────────────────────────────────────────────────────
@@ -39,6 +39,14 @@ TOGETHER_API_KEY: str = os.environ.get("TOGETHER_API_KEY", "")
 TOGETHER_MODEL: str = os.environ.get(
     "TOGETHER_MODEL", "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo"
 )
+
+# ─── LLM — DeepSeek ───────────────────────────────────────────────────────────
+DEEPSEEK_API_KEY: str = os.environ.get("DEEPSEEK_API_KEY", "")
+DEEPSEEK_MODEL: str = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+
+# ─── LLM — Hugging Face ───────────────────────────────────────────────────────
+HF_API_KEY: str = os.environ.get("HF_API_KEY", "")
+HF_MODEL: str = os.environ.get("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 
 # ─── TTS (Edge-TTS) ───────────────────────────────────────────────────────────
 TTS_VOICE: str = os.environ.get("TTS_VOICE", "vi-VN-HoaiMyNeural")
