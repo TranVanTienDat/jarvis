@@ -35,7 +35,7 @@ from server.orchestrator.intent_classifier import IntentClassifier
 from server.orchestrator.policy_engine import PolicyEngine
 from server.orchestrator.state_manager import State, StateManager
 from server.orchestrator.tool_manager import ToolManager
-from server.services.llm import LLMError, LLMService
+from server.llms.base import BaseLLMService, LLMError
 from server.services.tts import TTSError, TTSService
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class Orchestrator:
         policy_engine: PolicyEngine,
         state_manager: StateManager,
         tool_manager: ToolManager,
-        llm_service: LLMService,
+        llm_service: BaseLLMService,
         tts_service: TTSService,
     ) -> None:
         self.context_manager = context_manager

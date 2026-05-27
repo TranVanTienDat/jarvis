@@ -18,7 +18,7 @@ from server.orchestrator.intent_classifier import IntentClassifier
 from server.orchestrator.policy_engine import PolicyEngine
 from server.orchestrator.state_manager import StateManager
 from server.orchestrator.tool_manager import ToolManager
-from server.services.llm import LLMService
+from server.llms.factory import create_llm_service
 from server.services.mqtt_manager import MQTTManager
 from server.services.tts import TTSService
 
@@ -47,7 +47,7 @@ app.add_middleware(
 
 # Services
 _mqtt_manager = MQTTManager()
-_llm_service = LLMService()
+_llm_service = create_llm_service()
 _tts_service = TTSService()
 
 # Orchestrator sub-modules
@@ -88,6 +88,7 @@ async def on_startup() -> None:
 async def on_shutdown() -> None:
     logger.info("Server shutting down…")
     _mqtt_manager.disconnect()
+    await _llm_service.close()
     await _context_manager.close()
 
 
