@@ -22,9 +22,9 @@ from client.audio.capture import AudioCapture, AudioCaptureError
 from client.audio.player import AudioPlayer
 from client.audio.vad import VAD
 from client.config import (
-    PORCUPINE_ACCESS_KEY,
-    PORCUPINE_KEYWORD_PATH,
     SAMPLE_RATE,
+    WAKEWORD_MODEL,
+    WAKEWORD_THRESHOLD,
 )
 from client.stt.engine import STTEngine, STTError
 from client.transport.ws_client import ConnectionFailed, WSClient
@@ -74,8 +74,8 @@ class VoiceChatbotClient:
         # Init wake word detector
         try:
             self._wakeword = WakeWordDetector(
-                access_key=PORCUPINE_ACCESS_KEY,
-                keyword_path=PORCUPINE_KEYWORD_PATH,
+                model_name=WAKEWORD_MODEL,
+                threshold=WAKEWORD_THRESHOLD,
             )
         except WakeWordInitError as exc:
             logger.critical("Cannot start: %s", exc)

@@ -1,7 +1,8 @@
 sounddevice==0.4.7
 webrtcvad==2.0.10
-pvporcupine==3.0.2
+openwakeword==0.6.0
 transformers==4.44.2
 websockets==12.0
 numpy==1.26.4
 torch==2.4.1
+onnxruntime==1.23.2

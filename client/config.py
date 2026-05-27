@@ -16,11 +16,10 @@ SILENCE_THRESHOLD_FRAMES: int = 17          # 17 × 30 ms ≈ 510 ms → end-of-
 BARGE_IN_MIN_FRAMES: int = 5               # 5 × 30 ms = 150 ms → barge-in trigger
 SPEAKER_ACTIVE_MULTIPLIER: float = 2.5     # dynamic energy threshold multiplier
 
-# ─── Wake Word (Porcupine) ────────────────────────────────────────────────────
-PORCUPINE_ACCESS_KEY: str = os.environ.get("PORCUPINE_ACCESS_KEY", "")
-PORCUPINE_KEYWORD_PATH: str = os.environ.get(
-    "PORCUPINE_KEYWORD_PATH", "wakeword/hey_ai.ppn"
-)
+# ─── Wake Word (openWakeWord) ─────────────────────────────────────────────────
+# Available models: hey_jarvis, alexa, hey_mycroft, hey_rhasspy
+WAKEWORD_MODEL: str = os.environ.get("WAKEWORD_MODEL", "hey_jarvis")
+WAKEWORD_THRESHOLD: float = float(os.environ.get("WAKEWORD_THRESHOLD", "0.5"))
 
 # ─── STT ──────────────────────────────────────────────────────────────────────
 STT_MODEL_ID: str = "UsefulSensors/moonshine-tiny-vi"

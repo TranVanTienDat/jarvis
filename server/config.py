@@ -49,7 +49,7 @@ HF_API_KEY: str = os.environ.get("HF_API_KEY", "")
 HF_MODEL: str = os.environ.get("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 
 # ─── TTS (Edge-TTS) ───────────────────────────────────────────────────────────
-TTS_VOICE: str = os.environ.get("TTS_VOICE", "vi-VN-HoaiMyNeural")
+TTS_VOICE: str = os.environ.get("TTS_VOICE", "vi-VN-NamMinhNeural")
 TTS_CHUNK_SIZE_MS: int = 80  # target audio chunk duration in ms
 
 # ─── MQTT ─────────────────────────────────────────────────────────────────────
