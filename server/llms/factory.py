@@ -4,20 +4,26 @@ LLM provider factory.
 Reads provider selection and all model/key config from ``server.config``,
 which in turn reads from environment variables.
 
-Supported values for ``LLM_PROVIDER`` env var:
-    gemini        (default)
-    openai
-    openrouter
-    grok
-    together
-    deepseek
-    huggingface
+Single-provider mode (default):
+    Set ``LLM_PROVIDER`` to one of the supported values below.
+
+Fallback-chain mode:
+    Set ``LLM_PROVIDER_ORDER`` to a comma-separated list of providers in
+    priority order (e.g. ``gemini,deepseek,grok``).  When set, the factory
+    returns a ``FallbackChain`` that automatically tries each provider in
+    order, retrying transient errors and falling back on permanent ones.
+
+Supported provider names:
+    gemini | openai | openrouter | grok | together | deepseek | huggingface
 
 Environment variables reference:
 
     Variable              | Provider     | Description
     ----------------------|--------------|-----------------------------
-    LLM_PROVIDER          | all          | Which provider to use
+    LLM_PROVIDER          | all          | Single provider (ignored when LLM_PROVIDER_ORDER is set)
+    LLM_PROVIDER_ORDER    | all          | Comma-separated fallback priority list
+    LLM_RETRY_MAX         | all          | Max retries on transient errors (default: 2)
+    LLM_RETRY_DELAY_S     | all          | Exponential backoff base delay in seconds (default: 1.0)
     GEMINI_API_KEY        | gemini       | Google AI API key
     GEMINI_MODEL          | gemini       | e.g. gemini-2.0-flash
     OPENAI_API_KEY        | openai       | OpenAI API key
@@ -35,80 +41,114 @@ Environment variables reference:
 """
 from __future__ import annotations
 
+import logging
+
 import server.config as cfg
 from server.llms.base import BaseLLMService
 
+logger = logging.getLogger(__name__)
+
 
 def create_llm_service() -> BaseLLMService:
-    """Instantiate the LLM provider configured via ``LLM_PROVIDER``.
+    """Instantiate the configured LLM service.
 
-    Returns:
-        A ready-to-use ``BaseLLMService`` instance.
+    Returns a ``FallbackChain`` when ``LLM_PROVIDER_ORDER`` is set,
+    otherwise returns a single provider as before.
 
     Raises:
-        ValueError:  if ``LLM_PROVIDER`` is set to an unknown value.
+        ValueError:   if a provider name is unknown.
+        RuntimeError: if a required API key is missing.
+    """
+    if cfg.LLM_PROVIDER_ORDER.strip():
+        return _create_fallback_chain()
+    return _create_single_provider(cfg.LLM_PROVIDER)
+
+
+# ── Fallback chain ────────────────────────────────────────────────────────────
+
+def _create_fallback_chain() -> BaseLLMService:
+    """Build a FallbackChain from LLM_PROVIDER_ORDER."""
+    from server.fallback import FallbackChain
+    from server.fallback.notifier import FallbackNotifier
+    from server.services.tts import TTSService
+
+    raw_order = cfg.LLM_PROVIDER_ORDER
+    names = [p.strip() for p in raw_order.split(",") if p.strip()]
+
+    providers: list[BaseLLMService] = []
+    for name in names:
+        try:
+            svc = _create_single_provider(name)
+            providers.append(svc)
+        except (ValueError, RuntimeError) as exc:
+            logger.warning(
+                "FallbackChain: skipping provider %r — %s", name, exc
+            )
+
+    tts = TTSService()
+    notifier = FallbackNotifier(tts)
+    return FallbackChain(
+        providers=providers,
+        notifier=notifier,
+        max_retry=cfg.LLM_RETRY_MAX,
+        retry_delay_s=cfg.LLM_RETRY_DELAY_S,
+    )
+
+
+# ── Single provider ───────────────────────────────────────────────────────────
+
+def _create_single_provider(provider: str) -> BaseLLMService:
+    """Instantiate a single LLM provider by name.
+
+    Raises:
+        ValueError:   if ``provider`` is not a known name.
         RuntimeError: if the required API key is missing.
     """
-    provider = cfg.LLM_PROVIDER.lower().strip()
+    name = provider.lower().strip()
 
-    if provider == "gemini":
+    if name == "gemini":
         from server.llms.gemini import GeminiLLMService
-        _require_key("GEMINI_API_KEY", cfg.GEMINI_API_KEY, provider)
-        return GeminiLLMService(
-            api_key=cfg.GEMINI_API_KEY,
-            model=cfg.GEMINI_MODEL,
-        )
+        _require_key("GEMINI_API_KEY", cfg.GEMINI_API_KEY, name)
+        return GeminiLLMService(api_key=cfg.GEMINI_API_KEY, model=cfg.GEMINI_MODEL)
 
-    if provider == "openai":
+    if name == "openai":
         from server.llms.openai import OpenAILLMService
-        _require_key("OPENAI_API_KEY", cfg.OPENAI_API_KEY, provider)
-        return OpenAILLMService(
-            api_key=cfg.OPENAI_API_KEY,
-            model=cfg.OPENAI_MODEL,
-        )
+        _require_key("OPENAI_API_KEY", cfg.OPENAI_API_KEY, name)
+        return OpenAILLMService(api_key=cfg.OPENAI_API_KEY, model=cfg.OPENAI_MODEL)
 
-    if provider == "openrouter":
+    if name == "openrouter":
         from server.llms.openrouter import OpenRouterLLMService
-        _require_key("OPENROUTER_API_KEY", cfg.OPENROUTER_API_KEY, provider)
+        _require_key("OPENROUTER_API_KEY", cfg.OPENROUTER_API_KEY, name)
         return OpenRouterLLMService(
-            api_key=cfg.OPENROUTER_API_KEY,
-            model=cfg.OPENROUTER_MODEL,
+            api_key=cfg.OPENROUTER_API_KEY, model=cfg.OPENROUTER_MODEL
         )
 
-    if provider == "grok":
+    if name == "grok":
         from server.llms.grok import GrokLLMService
-        _require_key("XAI_API_KEY", cfg.XAI_API_KEY, provider)
-        return GrokLLMService(
-            api_key=cfg.XAI_API_KEY,
-            model=cfg.GROK_MODEL,
-        )
+        _require_key("XAI_API_KEY", cfg.XAI_API_KEY, name)
+        return GrokLLMService(api_key=cfg.XAI_API_KEY, model=cfg.GROK_MODEL)
 
-    if provider == "together":
+    if name == "together":
         from server.llms.together import TogetherLLMService
-        _require_key("TOGETHER_API_KEY", cfg.TOGETHER_API_KEY, provider)
+        _require_key("TOGETHER_API_KEY", cfg.TOGETHER_API_KEY, name)
         return TogetherLLMService(
-            api_key=cfg.TOGETHER_API_KEY,
-            model=cfg.TOGETHER_MODEL,
+            api_key=cfg.TOGETHER_API_KEY, model=cfg.TOGETHER_MODEL
         )
 
-    if provider == "deepseek":
+    if name == "deepseek":
         from server.llms.deepseek import DeepSeekLLMService
-        _require_key("DEEPSEEK_API_KEY", cfg.DEEPSEEK_API_KEY, provider)
+        _require_key("DEEPSEEK_API_KEY", cfg.DEEPSEEK_API_KEY, name)
         return DeepSeekLLMService(
-            api_key=cfg.DEEPSEEK_API_KEY,
-            model=cfg.DEEPSEEK_MODEL,
+            api_key=cfg.DEEPSEEK_API_KEY, model=cfg.DEEPSEEK_MODEL
         )
 
-    if provider == "huggingface":
+    if name == "huggingface":
         from server.llms.huggingface import HuggingFaceLLMService
-        _require_key("HF_API_KEY", cfg.HF_API_KEY, provider)
-        return HuggingFaceLLMService(
-            api_key=cfg.HF_API_KEY,
-            model=cfg.HF_MODEL,
-        )
+        _require_key("HF_API_KEY", cfg.HF_API_KEY, name)
+        return HuggingFaceLLMService(api_key=cfg.HF_API_KEY, model=cfg.HF_MODEL)
 
     raise ValueError(
-        f"Unknown LLM_PROVIDER={provider!r}. "
+        f"Unknown provider {name!r}. "
         "Valid options: gemini, openai, openrouter, grok, together, deepseek, huggingface"
     )
 
@@ -116,5 +156,5 @@ def create_llm_service() -> BaseLLMService:
 def _require_key(env_var: str, value: str, provider: str) -> None:
     if not value:
         raise RuntimeError(
-            f"LLM_PROVIDER={provider!r} requires {env_var} to be set."
+            f"Provider {provider!r} requires {env_var} to be set."
         )

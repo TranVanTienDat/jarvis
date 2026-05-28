@@ -151,6 +151,10 @@ class Orchestrator:
         full_response = ""
 
         try:
+            # Inject websocket for FallbackChain TTS notifications (duck typing)
+            if hasattr(self.llm_service, "set_websocket"):
+                self.llm_service.set_websocket(websocket)
+
             token_stream = self.llm_service.stream(policy_result.llm_context)
             audio_stream = self.tts_service.synthesize_stream(token_stream)
 

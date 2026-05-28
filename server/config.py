@@ -48,6 +48,48 @@ DEEPSEEK_MODEL: str = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 HF_API_KEY: str = os.environ.get("HF_API_KEY", "")
 HF_MODEL: str = os.environ.get("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 
+# ─── LLM — Fallback chain ─────────────────────────────────────────────────────
+# Comma-separated provider priority order. When set, enables FallbackChain.
+# Example: "gemini,deepseek,grok,openrouter,openai,together,huggingface"
+# Leave empty to use single provider mode (LLM_PROVIDER).
+LLM_PROVIDER_ORDER: str = os.environ.get("LLM_PROVIDER_ORDER", "")
+
+# Max retries per provider on transient errors (5xx, connection reset).
+# Must be a non-negative integer; invalid values fall back to default.
+def _parse_retry_max() -> int:
+    import logging as _logging
+    _val = os.environ.get("LLM_RETRY_MAX", "2")
+    try:
+        _n = int(_val)
+        if _n < 0:
+            raise ValueError
+        return _n
+    except (ValueError, TypeError):
+        _logging.getLogger(__name__).warning(
+            "Invalid LLM_RETRY_MAX=%r (must be non-negative integer); using default 2", _val
+        )
+        return 2
+
+LLM_RETRY_MAX: int = _parse_retry_max()
+
+# Base delay in seconds for exponential backoff: delay * 2^attempt.
+# Must be a positive float; invalid values fall back to default.
+def _parse_retry_delay() -> float:
+    import logging as _logging
+    _val = os.environ.get("LLM_RETRY_DELAY_S", "1.0")
+    try:
+        _f = float(_val)
+        if _f <= 0:
+            raise ValueError
+        return _f
+    except (ValueError, TypeError):
+        _logging.getLogger(__name__).warning(
+            "Invalid LLM_RETRY_DELAY_S=%r (must be positive float); using default 1.0", _val
+        )
+        return 1.0
+
+LLM_RETRY_DELAY_S: float = _parse_retry_delay()
+
 # ─── TTS (Edge-TTS) ───────────────────────────────────────────────────────────
 TTS_VOICE: str = os.environ.get("TTS_VOICE", "vi-VN-NamMinhNeural")
 TTS_CHUNK_SIZE_MS: int = 80  # target audio chunk duration in ms
