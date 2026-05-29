@@ -13,6 +13,7 @@ from typing import AsyncIterator, Optional
 import numpy as np
 import torch
 from transformers import AutoProcessor, MoonshineForConditionalGeneration, TextIteratorStreamer
+import os
 
 from client.config import SAMPLE_RATE, STT_MODEL_ID
 
@@ -48,9 +49,11 @@ class STTEngine:
 
     def _load_sync(self) -> None:
         logger.info("Loading STT model: %s on %s …", STT_MODEL_ID, self._device)
-        self._processor = AutoProcessor.from_pretrained(STT_MODEL_ID)
+        # Respect common HF cache env vars, fallback to project-local cache
+        cache_dir = os.environ.get("TRANSFORMERS_CACHE") or os.environ.get("HF_HOME") or "./.cache/huggingface"
+        self._processor = AutoProcessor.from_pretrained(STT_MODEL_ID, cache_dir=cache_dir)
         self._model = MoonshineForConditionalGeneration.from_pretrained(
-            STT_MODEL_ID, torch_dtype=self._dtype
+            STT_MODEL_ID, cache_dir=cache_dir, torch_dtype=self._dtype
         ).to(self._device)
         self._model.eval()
         logger.info("STT model loaded.")

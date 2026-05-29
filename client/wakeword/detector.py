@@ -51,6 +51,10 @@ class WakeWordDetector:
         """
         try:
             from openwakeword.model import Model  # type: ignore[import]
+            from openwakeword.utils import download_models  # type: ignore[import]
+
+            # Ensure the bundled wake word assets are present before initialising.
+            download_models([model_name])
 
             self._model = Model(
                 wakeword_models=[model_name],
