@@ -78,3 +78,5 @@ htmlcov/
 *.log
 logs/
 .cache/
+.DS_Store
+.gitignore
