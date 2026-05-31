@@ -43,3 +43,17 @@ Hệ thống sử dụng **Python** làm ngôn ngữ chủ đạo cho cả Clien
 2.  **Khởi động các dịch vụ phụ trợ**:
     - Chạy MQTT Broker (Mosquitto) nội bộ hoặc cloud.
     - Chạy Redis để lưu cache session hội thoại.
+
+## ▶️ Chạy thử cục bộ (Run locally)
+
+Sau khi đã kích hoạt virtualenv và cài dependencies, bạn có thể chạy các lệnh sau để thử STT từ file WAV hoặc khởi chạy client:
+
+- Chạy helper để transcribe một file WAV 16 kHz mono int16:
+
+  `python3 -m client.stt.test_helpers path/to/your_16k_mono.wav`
+
+- Khởi chạy client (phiên local, dùng Python từ virtualenv):
+
+  `.venv/bin/python3 -m client.main`
+
+Ghi chú: lần chạy đầu tiên `STTEngine.load()` có thể mất thời gian (tải model, nạp weights). Nên load model một lần và reuse nếu chạy nhiều lần.
